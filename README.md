@@ -87,7 +87,7 @@ asyncio.run(main())
 ## Testing
 
  
-In order to test the library, you will need a test module and a plugin for async calls as **pytest** and **pytest-asyncio** ---
+In order to test the library, you will need a test module and a plugin for async calls as **pytest** and **pytest-asyncio** 
 
 To run the tests, use the following command:
 
