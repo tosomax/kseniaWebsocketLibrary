@@ -7,6 +7,8 @@ Library for connecting to Ksenia webserver .
 - The unit allows two modes of communication to the webserver: unencrypted transmission and via SSL. Depending on the version of the unit, SSL communication may not work due to outdated protocols on the unit, which python websocket library can no longer communicate with. Adjust the conf.py as needed.
 - The Lares SSL certificate is self signed. For this reason, SSL Certificate authentication is disabled, this is vulnerable to man in the middle attacks (The same is true when accessing your Lares Ksenia 4.0 central from your PC/Browser!).
 
+  
+[![PyPI](https://img.shields.io/pypi/v/kseniaWebsocketUtil.svg)](https://pypi.org/project/kseniaWebsocketUtil/)
 ## Requirements
 
 - Python 3.6+
