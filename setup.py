@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="kseniaWebsocketUtil",
-    version="0.0.3",
+    version="0.0.4",
     author="realnot16",
     author_email="benedetto.padula@gmail.com",
     description="a simple websocket utility to communicate with lares units",
@@ -13,6 +13,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/realnot16/kseniaWebsocketUtil",
     packages=find_packages(),
+    install_requires=[
+        "websockets>=10.0"  # Specifica la versione minima, se necessaria
+    ]
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
