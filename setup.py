@@ -15,7 +15,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "websockets>=10.0"  # Specifica la versione minima, se necessaria
-    ]
+    ],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
