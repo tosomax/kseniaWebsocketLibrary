@@ -1,35 +1,38 @@
-name: Python package
+name: Build and Archive Python Package
 
 on:
   push:
     branches:
-      - main  # Trigger del workflow quando fai push sulla branch principale.
+      - main  # Esegui il workflow solo quando c'è un push sulla branch principale
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Checkout del codice
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
+      # Configurazione di Python
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.8'  # Scegli la versione di Python.
+          python-version: '3.8'  # Puoi cambiare la versione di Python
 
-      - name: Install dependencies
+      # Installazione delle dipendenze necessarie per costruire il pacchetto
+      - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel twine
+          pip install setuptools wheel
 
+      # Costruzione del pacchetto
       - name: Build the package
-        run: |
-          python setup.py sdist bdist_wheel
+        run: python setup.py sdist bdist_wheel
 
-      - name: Publish to GitHub Packages
-        env:
-          USERNAME: ${{ github.actor }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usa il token GitHub per l'autenticazione
-        run: |
-          twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
+      # Salvare l'output come artefatto
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: kseniaWebsocketLibrary
+          path: dist/
