@@ -3,7 +3,7 @@ name: Python package
 on:
   push:
     branches:
-      - main  # Trigger del workflow quando fai push sulla branch principale. test
+      - main  # Trigger del workflow quando fai push sulla branch principale.
 
 jobs:
   build:
@@ -32,4 +32,4 @@ jobs:
           USERNAME: ${{ github.actor }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usa il token GitHub per l'autenticazione
         run: |
-          twine upload dist/*
+          twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
