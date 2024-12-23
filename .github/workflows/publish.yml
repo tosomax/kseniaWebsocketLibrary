@@ -32,7 +32,7 @@ jobs:
 
       # Salvare l'output come artefatto
       - name: Upload package as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kseniaWebsocketLibrary
           path: dist/
