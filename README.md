@@ -2,7 +2,8 @@
 
 Library for connecting to Ksenia webserver .
 
-- Supported components: outputs, zones, partitions, scenarios, powerlines. For other components, open issues to linksss
+- Supported components: outputs, zones, partitions, scenarios, powerlines. For other components, open  a new issue
+- This library may lower the security of your alarm system. Please be aware of it!
 - To establish communication it's necessary to provide an access PIN, DO NOT USE THE ADMINISTRATOR PIN, create an ad hoc user + dedicated pin.
 - The unit allows two modes of communication to the webserver: unencrypted transmission and via SSL. Depending on the version of the unit, SSL communication may not work due to outdated protocols on the unit, which python websocket library can no longer communicate with. Adjust the conf.py as needed.
 - The Lares SSL certificate is self signed. For this reason, SSL Certificate authentication is disabled, this is vulnerable to man in the middle attacks (The same is true when accessing your Lares Ksenia 4.0 central from your PC/Browser!).
@@ -101,8 +102,6 @@ pytest tests/test_websocketmanager.py
 
 This project is licensed under the GNU General Public License v3.0. See the LICENSE file for details.
 
-thx to https://github.com/gvisconti1983/lares-hass for helpful insights
-
 ## Support
 
 
@@ -110,4 +109,6 @@ thx to https://github.com/gvisconti1983/lares-hass for helpful insights
 If you find this project useful, consider making a donation to support its development:
 
 [![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate/?hosted_button_id=XXMMY7ZYEHWW4)
+
+thx to https://github.com/gvisconti1983/lares-hass for helpful insights
 
