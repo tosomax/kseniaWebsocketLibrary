@@ -3,7 +3,7 @@ name: Python package
 on:
   push:
     branches:
-      - main  # Trigger del workflow quando fai push sulla branch principale.
+      - main  # Trigger del workflow quando fai push sulla branch principale. test
 
 jobs:
   build:
