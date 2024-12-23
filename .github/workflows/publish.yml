@@ -32,4 +32,4 @@ jobs:
           USERNAME: ${{ github.actor }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usa il token GitHub per l'autenticazione
         run: |
-          twine upload --repository-url https://pypi.github.com/ kseniaWebsocketLibrary/dist/*
+          twine upload dist/*
