@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 import ssl
-from kseniaWebsocketUtil.wscall import ws_login,realtime, readData, exeScenario, setOutput
+from kseniaWebsocketLibrary.wscall import ws_login,realtime, readData, exeScenario, setOutput
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2) 
 ssl_context.verify_mode = ssl.CERT_NONE

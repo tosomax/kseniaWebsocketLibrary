@@ -1,34 +1,35 @@
-name: Publish Python Package
+name: Python package
 
 on:
   push:
-    tags:
-      - "v*"  # Questo workflow si attiva solo quando fai un push di un tag che inizia con "v"
+    branches:
+      - main  # Trigger del workflow quando fai push sulla branch principale.
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.x"
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'  # Scegli la versione di Python.
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip setuptools wheel twine
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
 
-    - name: Build package
-      run: |
-        python setup.py sdist bdist_wheel
+      - name: Build the package
+        run: |
+          python setup.py sdist bdist_wheel
 
-    - name: Publish to PyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      run: |
-        python -m twine upload dist/* --verbose
+      - name: Publish to GitHub Packages
+        env:
+          USERNAME: ${{ github.actor }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usa il token GitHub per l'autenticazione
+        run: |
+          twine upload --repository-url https://pypi.github.com/ realnot16 kseniaWebsocketLibrary/dist/*

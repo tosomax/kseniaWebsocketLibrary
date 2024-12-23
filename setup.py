@@ -4,14 +4,14 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(
-    name="kseniaWebsocketUtil",
+    name="kseniaWebsocketLibrary",
     version="0.0.4",
     author="realnot16",
     author_email="benedetto.padula@gmail.com",
     description="a simple websocket utility to communicate with lares units",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/realnot16/kseniaWebsocketUtil",
+    url="https://github.com/realnot16/kseniaWebsocketLibrary/packages",
     packages=find_packages(),
     install_requires=[
         "websockets>=10.0"  # Specifica la versione minima, se necessaria
@@ -25,7 +25,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "License :: OSI Approved :: MIT License",
+        "License :: Other/Proprietary License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',

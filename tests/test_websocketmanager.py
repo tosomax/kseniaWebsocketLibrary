@@ -1,4 +1,4 @@
-from kseniaWebsocketUtil.websocketmanager import WebSocketManager
+from kseniaWebsocketLibrary.websocketmanager import WebSocketManager
 import tests.kwsConf as kwsConf
 import logging, pytest
 
