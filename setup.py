@@ -11,10 +11,10 @@ setup(
     description="a simple websocket utility to communicate with lares units",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/realnot16/kseniaWebsocketLibrary/packages",
+    url="https://github.com/realnot16/kseniaWebsocketLibrary",
     packages=find_packages(),
     install_requires=[
-        "websockets>=10.0"  # Specifica la versione minima, se necessaria
+        "websockets>=10.0"
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
