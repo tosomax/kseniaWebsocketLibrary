@@ -1,39 +1,36 @@
-name: Build and Archive Python Package
+name: Publish Python Package
 
 on:
   push:
     branches:
-      - main  # Esegui il workflow solo quando c'è un push sulla branch principale
+      - main  # Esegui il workflow solo sui push alla branch "main"
+  workflow_dispatch:  # Consente di eseguire manualmente il workflow
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout del codice
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Check out code
+      uses: actions/checkout@v3
 
-      # Configurazione di Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'  # Puoi cambiare la versione di Python
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9  # Specifica la versione di Python
 
-      # Installazione delle dipendenze necessarie per costruire il pacchetto
-      - name: Install build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
 
-      # Costruzione del pacchetto
-      - name: Build the package
-        run: python setup.py sdist bdist_wheel
+    - name: Build the package
+      run: |
+        python -m build
 
-      # Salvare l'output come artefatto
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: "__token__"
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          python -m twine upload dist/*
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: "__token__"
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        python -m twine upload dist/*
