@@ -6,6 +6,9 @@ on:
       - main  # Esegui il workflow solo sui push alla branch "main"
   workflow_dispatch:  # Consente di eseguire manualmente il workflow
 
+permissions:
+  contents: write  # Permessi per operazioni di scrittura su GitHub
+  
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
