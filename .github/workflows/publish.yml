@@ -31,8 +31,9 @@ jobs:
         run: python setup.py sdist bdist_wheel
 
       # Salvare l'output come artefatto
-      - name: Upload package as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kseniaWebsocketLibrary
-          path: dist/
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          python -m twine upload dist/*
