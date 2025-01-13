@@ -1,4 +1,4 @@
-# kseniaWebsocketUtil
+# kseniaWebsocketLibrary
 
 Library for connecting to Ksenia webserver .
 
@@ -9,7 +9,7 @@ Library for connecting to Ksenia webserver .
 - The Lares SSL certificate is self signed. For this reason, SSL Certificate authentication is disabled, this is vulnerable to man in the middle attacks (The same is true when accessing your Lares Ksenia 4.0 central from your PC/Browser!).
 
   
-[![PyPI](https://img.shields.io/pypi/v/kseniaWebsocketUtil.svg)](https://pypi.org/project/kseniaWebsocketUtil/)
+[![PyPI](https://img.shields.io/pypi/v/kseniaWebsocketUtil.svg)](https://pypi.org/project/kseniaWebsocketLibrary/)
 ## Requirements
 
 - Python 3.6+
