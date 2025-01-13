@@ -1,44 +1,20 @@
-# **Contratto di Licenza Software**
+Copyright (c) 2025 [realnot16]
 
-## **1. Concessione della Licenza**  
-Il presente software ("Libreria") è di proprietà esclusiva del Licenziante ("realnot16") ed è concesso in licenza, non venduto, all'Utente ("Licenziatario") ai sensi dei termini di questo Contratto. Installando, copiando o utilizzando in altro modo la Libreria, il Licenziatario accetta di essere vincolato ai termini di questo Contratto di Licenza.  
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Il Licenziante concede al Licenziatario una licenza non esclusiva, non trasferibile e revocabile per utilizzare la Libreria esclusivamente allo scopo di integrare il sistema centrale di allarme specificato.  
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
----
-
-## **2. Restrizioni**  
-Il Licenziatario si impegna a:  
-1. **Non distribuire, sublicenziare, concedere in locazione, vendere, affittare o altrimenti trasferire la Libreria** a terzi senza il consenso scritto del Licenziante.  
-2. **Non decompilare, disassemblare o tentare in altro modo di derivare il codice sorgente della Libreria.**  
-3. **Non utilizzare la Libreria per scopi diversi da quelli esplicitamente previsti in questo Contratto.**  
-
----
-
-## **3. Esclusione di Garanzie**  
-La Libreria viene fornita "**COSÌ COM'È**", senza alcuna garanzia di alcun tipo, espressa o implicita, inclusa, a titolo esemplificativo, qualsiasi garanzia implicita di commerciabilità, idoneità per un particolare scopo o non violazione di diritti di terzi.  
-
-Il Licenziatario riconosce che la Libreria è progettata per facilitare la comunicazione con un sistema di allarme e che una configurazione o un uso improprio della Libreria potrebbe compromettere la sicurezza del sistema. **Il Licenziante non sarà ritenuto responsabile per eventuali danni diretti o indiretti derivanti dall'uso o dall'impossibilità di utilizzare la Libreria.**  
-
----
-
-## **4. Limitazione di Responsabilità**  
-Nella misura massima consentita dalla legge applicabile, il Licenziante non sarà responsabile per alcun danno derivante dall'uso o dall'uso improprio della Libreria, inclusi, a titolo esemplificativo, la perdita di profitti, dati o violazioni della sicurezza.  
-
----
-
-## **5. Risoluzione del Contratto**  
-Il presente Contratto di Licenza è valido fino alla sua risoluzione. Il Licenziante può risolvere il Contratto se il Licenziatario non rispetta i termini. **In caso di risoluzione, il Licenziatario è obbligato a cessare immediatamente l'utilizzo della Libreria e a distruggere tutte le copie in suo possesso.**  
-
----
-
-## **6. Legge Applicabile**  
-Il presente Contratto è regolato e interpretato in conformità alle leggi italiane. **Qualsiasi controversia derivante dal presente Contratto sarà sottoposta alla giurisdizione esclusiva del Tribunale del luogo di residenza o sede del Licenziante.**  
-
----
-
-## **7. Intero Accordo**  
-Il presente Contratto costituisce l'intero accordo tra il Licenziante e il Licenziatario in relazione alla Libreria e sostituisce tutti gli accordi precedenti.  
-
----
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
