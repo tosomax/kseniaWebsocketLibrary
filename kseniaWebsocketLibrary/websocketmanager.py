@@ -183,6 +183,7 @@ class WebSocketManager:
         while self._running:
             command_data = await self._command_queue.get() #search for the next command, if available
             output_id, command = command_data["output_id"], command_data["command"]
+            future = command_data["future"]
             try:
                 async with self._ws_lock:
                     self._command_in_progress = True  # set priority to pause listener process
@@ -197,6 +198,7 @@ class WebSocketManager:
                             self._logger
                         )
                     elif command == ("ON" or "OFF"):
+                        self._logger.debug(f"COMMAND QUEUE - Sending command {command} to {output_id}")
                         cmd_ok = await setOutput(
                             self._ws,
                             self._loginId,
@@ -207,21 +209,25 @@ class WebSocketManager:
                         )
 
                     if cmd_ok:
-                        self._logger.info(f"Command {command} for {output_id} has been executed.")
+                        self._logger.info(f"COMMAND QUEUE -  Command {command} for {output_id} has been executed.")
+                        future.set_result(True)
                     else:
-                        self._logger.error(f"Command {command} for {output_id} failed")
+                        self._logger.error(f"COMMAND QUEUE -  Command {command} for {output_id} failed")
+                        future.set_result(False)
                         # retry could be implemented
             except Exception as e:
-                self._logger.error(f"Error during command elaboration: {command} for {output_id}: {e}")
+                self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {command} for {output_id}: {e}")
+                future.set_exception(e)
             finally:
                 self._command_in_progress = False  # release priority to let listener get back to work
 
 
     #this function send the command to the queue
-    async def send_command(self, output_id, command):
+    async def send_command(self, output_id, command, future):
         command_data = {
             "output_id": output_id,
-            "command": command.upper()  #uppercase for ksenia websocket message
+            "command": command.upper(),  #uppercase for ksenia websocket message
+            "future": future
         }
         await self._command_queue.put(command_data)
 
@@ -236,22 +242,31 @@ class WebSocketManager:
    #Turn on output
     async def turnOnOutput(self, output_id):
         try:
-            await self.send_command(output_id, "ON")  #send command to turn "ON" an output
+            future = asyncio.Future()
+            await self.send_command(output_id, "ON",future)  #send command to turn "ON" an output
+            return await future
         except Exception as e:
-            self._logger.error(f"Error while turning on output {output_id}: {e}")
+            self._logger.error(f"Error while sending command to queue {output_id}: {e}")
+            return False
 
     #Turn off output
     async def turnOffOutput(self, output_id):
         try:
-            await self.send_command(output_id, "OFF")  #send command to turn "OFF" an output
+            future = asyncio.Future()
+            await self.send_command(output_id, "OFF", future)  #send command to turn "OFF" an output
+            return await future
         except Exception as e:
-            self._logger.error(f"Error while turning off output {output_id}: {e}")
+            self._logger.error(f"Error while sending command to queue {output_id}: {e}")
+            return False
         
     async def executeScenario(self, scenario_id):
         try:
+            future = asyncio.Future()
             await self.send_command(scenario_id, "SCENARIO") #send command execute "SCENARIO"
+            return await future
         except Exception as e:
-            self._logger.error(f"Errore durante l'attivazione dello scenario {scenario_id}: {e}")
+            self._logger.error(f"Error while sending scenario to queue  {scenario_id}: {e}")
+            return False
         
     
 
@@ -267,8 +282,10 @@ class WebSocketManager:
             state_data = next(
                 (state for state in lares_realtime if state["ID"] == light_id), None
             )
-            state_data["STA"]=state_data["STA"].lower()
+            
             if state_data:
+                state_data["STA"]=state_data["STA"].lower()
+                state_data["POS"] = int(state_data.get("POS", 255))
                 lights_with_states.append({**light, **state_data})
 
         #self._logger.info("LIGHTS - Combined lights with states: %s", lights_with_states)

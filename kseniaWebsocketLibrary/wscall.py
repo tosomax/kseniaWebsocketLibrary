@@ -102,10 +102,11 @@ async def setOutput(websocket, login_id, pin, output_id, status, logger):
         await websocket.send(json_cmd)
         json_resp_states = await websocket.recv()
         response = json.loads(json_resp_states)
+        logger.debug(f"WSCALL - response: {response}")
         if response["PAYLOAD"]["RESULT"] == "OK":
             cmd_ok = True
     except Exception as e:
-        logger.error(f"setOutput call failed: {e}")
+        logger.error(f"WSCALL -  setOutput call failed: {e}")
         logger.error(response)
 
     return cmd_ok
@@ -113,7 +114,7 @@ async def setOutput(websocket, login_id, pin, output_id, status, logger):
 
 #this function execute the relative scenario
 async def exeScenario(websocket, login_id, pin, scenario_id, logger):
-    logger.info("trying command")
+    logger.info("WSCALL - trying executing scenario")
     global cmd_id
     cmd_id = cmd_id + 1
     json_cmd = addCRC(
@@ -132,7 +133,7 @@ async def exeScenario(websocket, login_id, pin, scenario_id, logger):
     await websocket.send(json_cmd)
     json_resp = await websocket.recv()
     response = json.loads(json_resp)
-    logger.info(response)
+    logger.info(f"WSCALL - executed scenario {response} ")
     cmd_ok = False
     if response["PAYLOAD"]["RESULT"] == "OK":
         cmd_ok = True
