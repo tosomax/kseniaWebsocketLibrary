@@ -197,8 +197,18 @@ class WebSocketManager:
                             output_id,
                             self._logger
                         )
-                    elif command == ("ON" or "OFF") or isinstance(command, int):
+                    elif command == ("ON" or "OFF"):
                         self._logger.debug(f"COMMAND QUEUE - Sending command {command} to {output_id}")
+                        cmd_ok = await setOutput(
+                            self._ws,
+                            self._loginId,
+                            self._pin,
+                            output_id,
+                            command,
+                            self._logger
+                        )
+                    elif isinstance(command, int):      #dimmer
+                        self._logger.debug(f"COMMAND QUEUE - Sending command for dimmer {str(command)} to {output_id}")
                         cmd_ok = await setOutput(
                             self._ws,
                             self._loginId,
@@ -249,7 +259,7 @@ class WebSocketManager:
                 await self.send_command(output_id, "ON",future)  #send command to turn "ON" an output
             return await future
         except Exception as e:
-            self._logger.error(f"Error while sending command to queue {output_id}: {e}")
+            self._logger.error(f"Error while sending command to queue with id {output_id}: {e}")
             return False
 
     #Turn off output
