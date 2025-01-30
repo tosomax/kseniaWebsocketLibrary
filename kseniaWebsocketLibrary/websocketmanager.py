@@ -27,67 +27,85 @@ class WebSocketManager:
         self._command_queue = asyncio.Queue()  # this one queue all the commands that will be sent to lares
         self._command_in_progress = False  # state to get priority in in the ws communication
 
+        #connection retry parameters
+        self._max_retries = 5  
+        self._retry_delay = 1 
+
 
     #Connect to ws with unsecure connection!!!!!
     async def connect(self):
-        try:
-            uri=f"ws://{self._ip}/KseniaWsock"         #using unsecure connection!!!!!!
-            self._logger.info("Connecting to WebSocket...")
-            self._ws = await websockets.connect(uri, subprotocols=['KS_WSOCK'])      
-            self._loginId = await ws_login(self._ws, self._pin, self._logger)
-            if self._loginId < 0:
-                self._logger.error("WebSocket login error")
-                raise Exception("Login failed")
-            self._logger.info(f"Connected to websocket - ID {self._loginId}")
-            async with self._ws_lock:
-                self._logger.info("extracting inital data")
-                self._readData = await readData(self._ws,self._loginId,self._logger)
-                #self._logger.debug(self._readData)
-            async with self._ws_lock:
-                self._logger.info("realtime connection started")
-                self._realtimeInitialData = await realtime(self._ws,self._loginId,self._logger)
-                #self._logger.debug(self._realtimeInitialData)
-            self._logger.debug("initial data acquired")
-            self._loginId
+        retries = 0
+        while retries < self._max_retries:
+            try:
+                uri=f"ws://{self._ip}/KseniaWsock"         #using unsecure connection!!!!!!
+                self._logger.info("Connecting to WebSocket...")
+                self._ws = await websockets.connect(uri, subprotocols=['KS_WSOCK'])      
+                self._loginId = await ws_login(self._ws, self._pin, self._logger)
+                if self._loginId < 0:
+                    self._logger.error("WebSocket login error")
+                    raise Exception("Login failed")
+                self._logger.info(f"Connected to websocket - ID {self._loginId}")
+                async with self._ws_lock:
+                    self._logger.info("extracting inital data")
+                    self._readData = await readData(self._ws,self._loginId,self._logger)
+                    #self._logger.debug(self._readData)
+                async with self._ws_lock:
+                    self._logger.info("realtime connection started")
+                    self._realtimeInitialData = await realtime(self._ws,self._loginId,self._logger)
+                    #self._logger.debug(self._realtimeInitialData)
+                self._logger.debug("initial data acquired")
+                self._loginId
 
 
-            #starting listener and queue process
-            self._running = True  
-            asyncio.create_task(self.listener())
-            asyncio.create_task(self.process_command_queue())
+                #starting listener and queue process
+                self._running = True  
+                asyncio.create_task(self.listener())
+                asyncio.create_task(self.process_command_queue())
 
-        except Exception as e:
-            self._logger.error(f"websocket connection error: {e}")
+            except (websockets.exceptions.WebSocketException, OSError) as e:
+                self._logger.error(f"WebSocket connection failed: {e}. Retrying in {self._retry_delay} seconds...")
+                await asyncio.sleep(self._retry_delay)
+                retries += 1
+                self._retry_delay *= 2 
+
+        self._logger.critical("Maximum retries reached. WebSocket connection failed.")
 
     #Connect to ws with secureConnection  -> ksenia has selfsigned certificates and old ssl version, it may not work
     async def connectSecure(self):
-        try:
-            uri=f"wss://{self._ip}/KseniaWsock" 
-            self._logger.info(f"Connecting to WebSocket...{uri}")
-            self._ws = await websockets.connect(uri,ssl=ssl_context, subprotocols=['KS_WSOCK'])       #secure connection
-            self._loginId = await ws_login(self._ws, self._pin, self._logger)
-            if self._loginId < 0:
-                self._logger.error("WebSocket login error")
-                raise Exception("Login failed")
-            self._logger.info(f"Connected to websocket - ID {self._loginId}")
-            async with self._ws_lock:
-                self._logger.info("extracting inital data")
-                self._readData = await readData(self._ws,self._loginId,self._logger)
-                #self._logger.debug(self._readData)
-            async with self._ws_lock:
-                self._logger.info("realtime connection started")
-                self._realtimeInitialData = await realtime(self._ws,self._loginId,self._logger)
-                #self._logger.debug(self._realtimeInitialData)
-            self._logger.info("initial data acquired")
+        retries = 0
+        while retries < self._max_retries:
+            try:
+                uri=f"wss://{self._ip}/KseniaWsock" 
+                self._logger.info(f"Connecting to WebSocket...{uri}")
+                self._ws = await websockets.connect(uri,ssl=ssl_context, subprotocols=['KS_WSOCK'])       #secure connection
+                self._loginId = await ws_login(self._ws, self._pin, self._logger)
+                if self._loginId < 0:
+                    self._logger.error("WebSocket login error")
+                    raise Exception("Login failed")
+                self._logger.info(f"Connected to websocket - ID {self._loginId}")
+                async with self._ws_lock:
+                    self._logger.info("extracting inital data")
+                    self._readData = await readData(self._ws,self._loginId,self._logger)
+                    #self._logger.debug(self._readData)
+                async with self._ws_lock:
+                    self._logger.info("realtime connection started")
+                    self._realtimeInitialData = await realtime(self._ws,self._loginId,self._logger)
+                    #self._logger.debug(self._realtimeInitialData)
+                self._logger.info("initial data acquired")
 
 
-            #starting listener and queue process
-            self._running = True  
-            asyncio.create_task(self.listener())
-            asyncio.create_task(self.process_command_queue())
+                #starting listener and queue process
+                self._running = True  
+                asyncio.create_task(self.listener())
+                asyncio.create_task(self.process_command_queue())
 
-        except Exception as e:
-            self._logger.error(f"websocket connection error: {e}")
+            except (websockets.exceptions.WebSocketException, OSError) as e:
+                self._logger.error(f"WebSocket connection failed: {e}. Retrying in {self._retry_delay} seconds...")
+                await asyncio.sleep(self._retry_delay)
+                retries += 1
+                self._retry_delay *= 2 
+
+        self._logger.critical("Maximum retries reached. WebSocket connection failed.")
 
         
 
@@ -101,7 +119,7 @@ class WebSocketManager:
                     message = None
                     async with self._ws_lock:
                         try:
-                            message = await asyncio.wait_for(self._ws.recv(), timeout=1) #fix timeout if needed
+                            message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
                         except asyncio.TimeoutError:
                             continue  # keep the listening going 
 
@@ -111,8 +129,9 @@ class WebSocketManager:
                 else:
                     await asyncio.sleep(0.1)  # Delay to avoid stopping the loop
             except websockets.exceptions.ConnectionClosed:
-                self._logger.error("WebSocket close")
+                self._logger.error("WebSocket close. trying reconnection")
                 self.running = False
+                await self.connect()
 
 
     async def handle_message(self, message):
