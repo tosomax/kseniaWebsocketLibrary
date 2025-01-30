@@ -197,7 +197,7 @@ class WebSocketManager:
                             output_id,
                             self._logger
                         )
-                    elif command == ("ON" or "OFF"):
+                    elif command == ("ON" or "OFF") or isinstance(command, int):
                         self._logger.debug(f"COMMAND QUEUE - Sending command {command} to {output_id}")
                         cmd_ok = await setOutput(
                             self._ws,
