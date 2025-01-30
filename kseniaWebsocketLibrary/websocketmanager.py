@@ -226,7 +226,7 @@ class WebSocketManager:
     async def send_command(self, output_id, command, future):
         command_data = {
             "output_id": output_id,
-            "command": command.upper(),  #uppercase for ksenia websocket message
+            "command": command.upper() if isinstance(command, str) else command,  #uppercase for ksenia websocket message
             "future": future
         }
         await self._command_queue.put(command_data)
