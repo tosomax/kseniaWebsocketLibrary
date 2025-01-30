@@ -151,7 +151,7 @@ class WebSocketManager:
             for callback in self.listeners["switches"]:
                 await callback(data["STATUS_OUTPUTS"])
         if "STATUS_BUS_HA_SENSORS" in data:
-            self._logger.debug(f"Updating state for domus {data['STATUS_BUS_HA_SENSORS']}")
+            #self._logger.debug(f"Updating state for domus {data['STATUS_BUS_HA_SENSORS']}")
             for callback in self.listeners["domus"]:
                 await callback(data["STATUS_BUS_HA_SENSORS"])
         if "STATUS_POWER_LINES" in data:
