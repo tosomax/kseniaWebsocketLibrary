@@ -62,6 +62,8 @@ class WebSocketManager:
                 asyncio.create_task(self.listener())
                 asyncio.create_task(self.process_command_queue())
 
+                return  
+
             except (websockets.exceptions.WebSocketException, OSError) as e:
                 self._logger.error(f"WebSocket connection failed: {e}. Retrying in {self._retry_delay} seconds...")
                 await asyncio.sleep(self._retry_delay)
@@ -98,6 +100,8 @@ class WebSocketManager:
                 self._running = True  
                 asyncio.create_task(self.listener())
                 asyncio.create_task(self.process_command_queue())
+
+                return
 
             except (websockets.exceptions.WebSocketException, OSError) as e:
                 self._logger.error(f"WebSocket connection failed: {e}. Retrying in {self._retry_delay} seconds...")
