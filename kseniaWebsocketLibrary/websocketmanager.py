@@ -187,8 +187,7 @@ class WebSocketManager:
             try:
                 async with self._ws_lock:
                     self._command_in_progress = True  # set priority to pause listener process
-                    self._logger.debug(f"COMMAND QUEUE - evaluating {command} for {output_id}")
-                    #2 types of command -> turing on/off output or executing scenarios
+                    #3 types of command -> turing on/off output, dimmer or executing scenarios
                     if command == "SCENARIO":
                         self._logger.debug(f"COMMAND QUEUE - executing scenario n {output_id}")
                         cmd_ok = await exeScenario(
