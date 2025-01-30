@@ -182,12 +182,12 @@ class WebSocketManager:
         self._logger.debug(f"command queue started")
         while self._running:
             command_data = await self._command_queue.get() #search for the next command, if available
-            output_id, command = command_data["output_id"], command_data["command"]
-            future = command_data["future"]
+            output_id, command, future = command_data["output_id"], command_data["command"], command_data["future"]
+
             try:
                 async with self._ws_lock:
                     self._command_in_progress = True  # set priority to pause listener process
-
+                    self._logger.debug(f"COMMAND QUEUE - evaluating {command} for {output_id}")
                     #2 types of command -> turing on/off output or executing scenarios
                     if command == "SCENARIO":
                         cmd_ok = await exeScenario(
@@ -240,10 +240,13 @@ class WebSocketManager:
                 
    
    #Turn on output
-    async def turnOnOutput(self, output_id):
+    async def turnOnOutput(self, output_id, brightness=None):
         try:
             future = asyncio.Future()
-            await self.send_command(output_id, "ON",future)  #send command to turn "ON" an output
+            if(brightness):
+                await self.send_command(output_id, brightness,future) #send command to turn "ON" an output with brightness
+            else:
+                await self.send_command(output_id, "ON",future)  #send command to turn "ON" an output
             return await future
         except Exception as e:
             self._logger.error(f"Error while sending command to queue {output_id}: {e}")
