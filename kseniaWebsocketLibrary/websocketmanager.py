@@ -183,13 +183,14 @@ class WebSocketManager:
         while self._running:
             command_data = await self._command_queue.get() #search for the next command, if available
             output_id, command, future = command_data["output_id"], command_data["command"], command_data["future"]
-
+            cmd_ok=False
             try:
                 async with self._ws_lock:
                     self._command_in_progress = True  # set priority to pause listener process
                     self._logger.debug(f"COMMAND QUEUE - evaluating {command} for {output_id}")
                     #2 types of command -> turing on/off output or executing scenarios
                     if command == "SCENARIO":
+                        self._logger.debug(f"COMMAND QUEUE - executing scenario n {output_id}")
                         cmd_ok = await exeScenario(
                             self._ws,
                             self._loginId,
