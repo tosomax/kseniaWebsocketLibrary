@@ -219,14 +219,14 @@ class WebSocketManager:
                         )
 
                     if cmd_ok:
-                        self._logger.info(f"COMMAND QUEUE -  Command {command} for {output_id} has been executed.")
+                        self._logger.info(f"COMMAND QUEUE -  Command {str(command)} for {output_id} has been executed.")
                         future.set_result(True)
                     else:
-                        self._logger.error(f"COMMAND QUEUE -  Command {command} for {output_id} failed")
+                        self._logger.error(f"COMMAND QUEUE -  Command {str(command)} for {output_id} failed")
                         future.set_result(False)
                         # retry could be implemented
             except Exception as e:
-                self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {command} for {output_id}: {e}")
+                self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {str(command)} for {output_id}: {e}")
                 future.set_exception(e)
             finally:
                 self._command_in_progress = False  # release priority to let listener get back to work
