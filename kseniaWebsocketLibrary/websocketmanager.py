@@ -27,6 +27,8 @@ class WebSocketManager:
         self._command_queue = asyncio.Queue()  # this one queue all the commands that will be sent to lares
         self._command_in_progress = False  # state to get priority in in the ws communication
 
+        self._pending_commands = {}
+
         #connection retry parameters
         self._max_retries = 5  
         self._retry_delay = 1 
@@ -141,10 +143,18 @@ class WebSocketManager:
     async def handle_message(self, message):
 
         #extract the message
+        id = message.get("ID", 0)
         payload = message.get("PAYLOAD", {})
         data = payload.get('Homeassistant', {})
 
         # sort received message for the right callback
+        if "RESULTS" in data:
+            output_id = status["ID"]
+            if output_id in self._pending_commands:
+                self._pending_commands[output_id].set()  # Segnala il completamento
+                del self._pending_commands[output_id]  # Rimuovi il comando completato
+
+
         if "STATUS_OUTPUTS" in data:
             for callback in self.listeners["lights"]:
                 await callback(data["STATUS_OUTPUTS"])
@@ -185,7 +195,7 @@ class WebSocketManager:
             output_id, command, future = command_data["output_id"],command_data["command"], command_data["future"]
             cmd_ok=False
 
-            self._logger.debug(f"COMMAND QUEUE - Debugging output: output_id={output_id}, command={command} ({type(command)})")
+            #self._logger.debug(f"COMMAND QUEUE - Debugging output: output_id={output_id}, command={command} ({type(command)})")
             try:
                 async with self._ws_lock:
                     self._command_in_progress = True  # set priority to pause listener process
@@ -241,7 +251,18 @@ class WebSocketManager:
             "command": command.upper() if isinstance(command, str) else command,  #uppercase for ksenia websocket message
             "future": future
         }
+
+        self._pending_commands[output_id] = asyncio.Event()
+
         await self._command_queue.put(command_data)
+
+        # Aspetta la conferma dal WebSocket
+        success = await asyncio.wait_for(self._pending_commands[output_id].wait(), timeout=5)
+
+        if success:
+            future.set_result(True)
+        else:
+            future.set_result(False)
 
 
     #this function close the websocket connection
