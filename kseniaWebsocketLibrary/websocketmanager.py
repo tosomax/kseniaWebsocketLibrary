@@ -182,8 +182,10 @@ class WebSocketManager:
         self._logger.debug(f"command queue started")
         while self._running:
             command_data = await self._command_queue.get() #search for the next command, if available
-            output_id, command, future = command_data["output_id"], str(command_data["command"]), command_data["future"]
+            output_id, command, future = command_data["output_id"],command_data["command"], command_data["future"]
             cmd_ok=False
+
+            self._logger.debug(f"COMMAND QUEUE - Debugging output: output_id={output_id}, command={command} ({type(command)})")
             try:
                 async with self._ws_lock:
                     self._command_in_progress = True  # set priority to pause listener process
@@ -214,7 +216,7 @@ class WebSocketManager:
                             self._loginId,
                             self._pin,
                             output_id,
-                            command,
+                            str(command),
                             self._logger
                         )
 
