@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="kseniaWebsocketLibrary",
-    version="0.0.27",
+    version="0.0.28",
     author="realnot16",
     author_email="benedetto.padula@gmail.com",
     description="a simple websocket utility to communicate with lares units",
