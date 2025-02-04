@@ -1,5 +1,4 @@
 import asyncio
-from typing import OrderedDict
 import websockets
 import json, time
 import ssl
@@ -33,13 +32,15 @@ class WebSocketManager:
 
         #connection retry parameters
         self._max_retries = 5  
-        self._retry_delay = 1 
+        self._retry_delay = 1
+        self._retries = 0
+        self._connSecure= 0    #0 unsecure  1 secure
 
 
     #Connect to ws with unsecure connection!!!!!
     async def connect(self):
-        retries = 0
-        while retries < self._max_retries:
+        self._connSecure= 0
+        while self._retries < self._max_retries:
             try:
                 uri=f"ws://{self._ip}/KseniaWsock"         #using unsecure connection!!!!!!
                 self._logger.info("Connecting to WebSocket...")
@@ -65,21 +66,21 @@ class WebSocketManager:
                 self._running = True  
                 asyncio.create_task(self.listener())
                 asyncio.create_task(self.process_command_queue())
-
+                self._retries = 0
                 return  
 
             except (websockets.exceptions.WebSocketException, OSError) as e:
                 self._logger.error(f"WebSocket connection failed: {e}. Retrying in {self._retry_delay} seconds...")
                 await asyncio.sleep(self._retry_delay)
-                retries += 1
+                self._retries += 1
                 self._retry_delay *= 2 
 
         self._logger.critical("Maximum retries reached. WebSocket connection failed.")
 
     #Connect to ws with secureConnection  -> ksenia has selfsigned certificates and old ssl version, it may not work
     async def connectSecure(self):
-        retries = 0
-        while retries < self._max_retries:
+        self._connSecure= 1
+        while self._retries < self._max_retries:
             try:
                 uri=f"wss://{self._ip}/KseniaWsock" 
                 self._logger.info(f"Connecting to WebSocket...{uri}")
@@ -110,7 +111,7 @@ class WebSocketManager:
             except (websockets.exceptions.WebSocketException, OSError) as e:
                 self._logger.error(f"WebSocket connection failed: {e}. Retrying in {self._retry_delay} seconds...")
                 await asyncio.sleep(self._retry_delay)
-                retries += 1
+                self._retries += 1
                 self._retry_delay *= 2 
 
         self._logger.critical("Maximum retries reached. WebSocket connection failed.")
@@ -137,7 +138,10 @@ class WebSocketManager:
             except websockets.exceptions.ConnectionClosed:
                 self._logger.error("WebSocket close. trying reconnection")
                 self.running = False
-                #await self.connect()
+                if self._connSecure:
+                    await self.connectSecure()
+                else:
+                    await self.connect()
 
 
     async def handle_message(self, message):
@@ -147,25 +151,17 @@ class WebSocketManager:
         data = payload.get('Homeassistant', {})
 
         self._logger.debug(f"message: {message}")
-        self._logger.debug(f"commands: {self._pending_commands}")
-        self._logger.debug(f"yoda  {message['CMD']}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
-            self._logger.debug(f"yoda {self._pending_commands}")
             if self._pending_commands:
-                self._logger.debug(f"id_msg: {message["ID"]} - id_pending: {self._pending_commands.keys()} -tipo msg {type(message["ID"])}")
-                command_data = self._pending_commands[message["ID"]]
                 self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
 
-                self._logger.debug(f"handle_message - Future state before set_result: done={command_data["future"].done()}, cancelled={command_data["future"].cancelled()}")
+                command_data = self._pending_commands[message["ID"]]
                 command_data["future"].set_result(True)  # Segna il comando come eseguito con successo
-                self._logger.debug(f"commands: {command_data}, future: {command_data['future'].done()}")
-                self._pending_commands.pop({message["ID"]})
-                self._logger.debug(f"commands: {self._pending_commands}")
+                self._pending_commands.pop(message["ID"])
             else:
                 self._logger.warning("Received CMD_USR_RES but no commands were pending")
-
         elif message["CMD"] == "REALTIME":
             if "STATUS_OUTPUTS" in data:
                 for callback in self.listeners["lights"]:
@@ -189,8 +185,7 @@ class WebSocketManager:
                 self._logger.debug(f"Updating state for zones {data['STATUS_ZONES']}")
                 for callback in self.listeners["zones"]:
                     await callback(data["STATUS_ZONES"])
-        else:
-            self._logger.warning("the if do not work")
+
 
 
     #this function is used to register a new entity to the listener
@@ -219,7 +214,8 @@ class WebSocketManager:
                             self._ws,
                             self._loginId,
                             self._pin,
-                            output_id,
+                            command_data,
+                            self._pending_commands,
                             self._logger
                         )
                     elif command in ("ON", "OFF"):
