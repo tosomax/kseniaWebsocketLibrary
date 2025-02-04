@@ -132,6 +132,7 @@ class WebSocketManager:
 
                 if message:         #if a message is received, handle it
                     message = json.loads(message)
+                    self._logger.debug(f"message received: {message}")
                     await self.handle_message(message)
             except websockets.exceptions.ConnectionClosed:
                 self._logger.error("WebSocket close. trying reconnection")
@@ -156,6 +157,8 @@ class WebSocketManager:
                 self._logger.debug(f"id_msg: {message["ID"]} - id_pending: {self._pending_commands.keys()} -tipo msg {type(message["ID"])}")
                 command_data = self._pending_commands[message["ID"]]
                 self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
+
+                self._logger.debug(f"handle_message - Future state before set_result: done={command_data["future"].done()}, cancelled={command_data["future"].cancelled()}")
                 command_data["future"].set_result(True)  # Segna il comando come eseguito con successo
                 self._logger.debug(f"commands: {command_data}, future: {command_data['future'].done()}")
                 self._pending_commands.pop({message["ID"]})
@@ -265,6 +268,7 @@ class WebSocketManager:
         try:
             # Aspetta la conferma dal WebSocket
             success = await asyncio.wait_for(future, timeout=60)
+            self._logger.debug(f"send_command - Future completed: {future.done()}, result: {success}")
 
             if not success:
                 self._logger.warning(f"Command {command} for {output_id} timed out")
