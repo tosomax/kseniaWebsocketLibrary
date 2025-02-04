@@ -146,6 +146,7 @@ class WebSocketManager:
         data = payload.get('Homeassistant', {})
 
         self._logger.debug(f"message: {message}")
+        self._logger.debug(f"commands: {self._pending_commands}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
@@ -153,10 +154,11 @@ class WebSocketManager:
                 command_data = self._pending_commands[{message["ID"]}]
                 self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
                 command_data["future"].set_result(True)  # Segna il comando come eseguito con successo
+                self._logger.debug(f"commands: {command_data}, future: {command_data['future'].done()}")
                 self._pending_commands.pop({message["ID"]})
+                self._logger.debug(f"commands: {self._pending_commands}")
             else:
                 self._logger.warning("Received CMD_USR_RES but no commands were pending")
-
 
         elif message["CMD"] == "REALTIME":
             if "STATUS_OUTPUTS" in data:
@@ -181,6 +183,8 @@ class WebSocketManager:
                 self._logger.debug(f"Updating state for zones {data['STATUS_ZONES']}")
                 for callback in self.listeners["zones"]:
                     await callback(data["STATUS_ZONES"])
+        else:
+            self._logger.warning("the if do not work")
 
 
     #this function is used to register a new entity to the listener
