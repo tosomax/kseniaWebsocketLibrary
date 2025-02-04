@@ -219,7 +219,7 @@ class WebSocketManager:
                             self._ws,
                             self._loginId,
                             self._pin,
-                            output_id,
+                            command_data,
                             self._pending_commands,
                             self._logger
                         )
@@ -265,9 +265,6 @@ class WebSocketManager:
                 return False
         except asyncio.TimeoutError:
             self._logger.warning(f"send_command - Timeout waiting for confirmation of command {command} for {output_id}")
-            return False
-        except Exception as e:  # Corretto per evitare problemi con variabile 'e'
-            self._logger.error(f"Error while waiting for command {command} for {output_id}: {e}")
             return False
         
         return True
