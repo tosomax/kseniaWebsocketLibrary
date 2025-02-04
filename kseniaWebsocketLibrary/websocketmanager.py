@@ -136,7 +136,7 @@ class WebSocketManager:
             except websockets.exceptions.ConnectionClosed:
                 self._logger.error("WebSocket close. trying reconnection")
                 self.running = False
-                await self.connect()
+                #await self.connect()
 
 
     async def handle_message(self, message):
