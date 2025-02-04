@@ -147,9 +147,11 @@ class WebSocketManager:
 
         self._logger.debug(f"message: {message}")
         self._logger.debug(f"commands: {self._pending_commands}")
+        self._logger.debug(f"yoda  {message['CMD']}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
+            self._logger.debug(f"yoda {self._pending_commands}")
             if self._pending_commands:
                 self._logger.debug(f"id_msg: {message["ID"]} - id_pending: {self._pending_commands.keys} -tipo msg {type(message["ID"])}")
                 command_data = self._pending_commands[int(message["ID"])]
@@ -290,7 +292,7 @@ class WebSocketManager:
             else:
                 success = await self.send_command(output_id, "ON")  #send command to turn "ON" an output
             if not success:
-                self._logger.warning(f"Failed to turn off output {output_id}.")
+                self._logger.warning(f"Failed to turn on output {output_id}.")
                 return False
             return True
         except Exception as e:
