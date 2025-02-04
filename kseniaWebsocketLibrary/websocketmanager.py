@@ -1,7 +1,7 @@
 import asyncio
 from typing import OrderedDict
 import websockets
-import json
+import json, time
 import ssl
 from kseniaWebsocketLibrary.wscall import ws_login,realtime, readData, exeScenario, setOutput
 
@@ -29,7 +29,7 @@ class WebSocketManager:
 
         self._command_queue = asyncio.Queue()  # this one queue all the commands that will be sent to lares
 
-        self._pending_commands = OrderedDict()
+        self._pending_commands = {}
 
         #connection retry parameters
         self._max_retries = 5  
@@ -146,13 +146,15 @@ class WebSocketManager:
         # data = payload.get('Homeassistant', {})
 
         data = message.get("PAYLOAD", {})
+        self._logger.debug(f"data: {data}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
             if self._pending_commands:
-                future, command_data = self._pending_commands.popitem(last=False)  # Prende il comando più vecchio
+                command_data = self._pending_commands[{message["ID"]}]
                 self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
-                future.set_result(True)  # Segna il comando come eseguito con successo
+                command_data["future"].set_result(True)  # Segna il comando come eseguito con successo
+                self._pending_commands.pop({message["ID"]})
             else:
                 self._logger.warning("Received CMD_USR_RES but no commands were pending")
 
@@ -194,49 +196,48 @@ class WebSocketManager:
     async def process_command_queue(self):
         self._logger.debug(f"command queue started")
         while self._running:
+            
+            command_data = await self._command_queue.get()
 
-            future = await self._command_queue.get()
-            if future in self._pending_commands:
-                command_data = self._pending_commands[future]
-                output_id, command = command_data["output_id"], command_data["command"]
+            output_id, command = command_data["output_id"], command_data["command"]
 
-                #self._logger.debug(f"COMMAND QUEUE - Debugging output: output_id={output_id}, command={command} ({type(command)})")
-                try:
-                    async with self._ws_lock:
-                        #3 types of command -> turing on/off output, dimmer or executing scenarios
-                        if command == "SCENARIO":
-                            self._logger.debug(f"COMMAND QUEUE - executing scenario n {output_id}")
-                            await exeScenario(
-                                self._ws,
-                                self._loginId,
-                                self._pin,
-                                output_id,
-                                self._logger
-                            )
-                        elif command in ("ON", "OFF"):
-                            self._logger.debug(f"COMMAND QUEUE - Sending command {command} to {output_id}")
-                            await setOutput(
-                                self._ws,
-                                self._loginId,
-                                self._pin,
-                                output_id,
-                                command,
-                                self._logger
-                            )
-                        elif isinstance(command, int):      #dimmer
-                            self._logger.debug(f"COMMAND QUEUE - Sending command for dimmer {str(command)} to {output_id}")
-                            await setOutput(
-                                self._ws,
-                                self._loginId,
-                                self._pin,
-                                output_id,
-                                str(command),
-                                self._logger
-                            )
+            try:
+                async with self._ws_lock:
+                    #3 types of command -> turing on/off output, dimmer or executing scenarios
+                    if command == "SCENARIO":
+                        self._logger.debug(f"COMMAND QUEUE - executing scenario n {output_id}")
+                        await exeScenario(
+                            self._ws,
+                            self._loginId,
+                            self._pin,
+                            output_id,
+                            self._logger
+                        )
+                    elif command in ("ON", "OFF"):
+                        self._logger.debug(f"COMMAND QUEUE - Sending command {command} to {output_id}")
+                        await setOutput(
+                            self._ws,
+                            self._loginId,
+                            self._pin,
+                            output_id,
+                            self._pending_commands,
+                            self._logger
+                        )
+                        
+                    elif isinstance(command, int):      #dimmer
+                        self._logger.debug(f"COMMAND QUEUE - Sending command for dimmer {str(command)} to {output_id}")
+                        await setOutput(
+                            self._ws,
+                            self._loginId,
+                            self._pin,
+                            command_data,
+                            self._pending_commands,
+                            self._logger
+                        )
 
-                        # retry could be implemented
-                except Exception as e:
-                    self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {str(command)} for {output_id}: {e}")
+                    # retry could be implemented
+            except Exception as e:
+                self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {str(command)} for {output_id}: {e}")
 
 
     #this function send the command to the queue
@@ -247,12 +248,11 @@ class WebSocketManager:
         command_data = {
             "output_id": output_id,
             "command": command.upper() if isinstance(command, str) else command,  #uppercase for ksenia websocket message
-            "future": future
+            "future": future,
+            "command_id": 0  # Aggiunge l'ID univoco
         }
 
-        self._pending_commands[future] = command_data
-
-        await self._command_queue.put(future)
+        await self._command_queue.put(command_data)
 
         self._logger.debug(f"send_command -  command add to queue  {str(command)} for {output_id}: {e}")
 

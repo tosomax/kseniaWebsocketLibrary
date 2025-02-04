@@ -79,7 +79,7 @@ async def readData(websocket,login_id,_LOGGER):
 
 
 # this function receive a status (on/off) and send it to the relative output
-async def setOutput(websocket, login_id, pin, output_id, status, logger):
+async def setOutput(websocket, login_id, pin, command_data, queue, logger):
     global cmd_id
     cmd_id = cmd_id + 1
     json_cmd = addCRC(
@@ -90,26 +90,21 @@ async def setOutput(websocket, login_id, pin, output_id, status, logger):
         + '","PIN":"'
         + pin
         + '","OUTPUT":{"ID":"'
-        + str(output_id)
+        + str(command_data["output_id"])
         + '","STA":"'
-        + status
+        + str(command_data["command"])
         + '"}}, "TIMESTAMP":"'
         + str(int(time.time()))
         + '", "CRC_16":"0x0000"}'
     )
-    cmd_ok = False
     try:
+        command_data["command_id"]=cmd_id
+        queue[cmd_id]= command_data
         await websocket.send(json_cmd)
-        #json_resp_states = await websocket.recv()
-        # response = json.loads(json_resp_states)
-        # logger.debug(f"WSCALL - response: {response}")
-        # if response["PAYLOAD"]["RESULT"] == "OK":
-        #     cmd_ok = True
+
     except Exception as e:
         logger.error(f"WSCALL -  setOutput call failed: {e}")
-        # logger.error(response)
 
-    # return cmd_ok
 
 
 #this function execute the relative scenario
