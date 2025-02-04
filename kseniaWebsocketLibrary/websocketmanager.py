@@ -155,6 +155,7 @@ class WebSocketManager:
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
             if self._pending_commands:
+                command_data = self._pending_commands[message["ID"]]
                 self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
 
                 command_data = self._pending_commands[message["ID"]]
