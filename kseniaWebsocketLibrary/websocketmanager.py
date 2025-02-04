@@ -1,4 +1,5 @@
 import asyncio
+from typing import OrderedDict
 import websockets
 import json
 import ssl
@@ -24,10 +25,11 @@ class WebSocketManager:
 
         self._ws_lock = asyncio.Lock() #take care of sync between ws calls
 
-        self._command_queue = asyncio.Queue()  # this one queue all the commands that will be sent to lares
-        self._command_in_progress = False  # state to get priority in in the ws communication
 
-        self._pending_commands = {}
+
+        self._command_queue = asyncio.Queue()  # this one queue all the commands that will be sent to lares
+
+        self._pending_commands = OrderedDict()
 
         #connection retry parameters
         self._max_retries = 5  
@@ -121,19 +123,16 @@ class WebSocketManager:
 
         while self._running:
             try:
-                if not self._command_in_progress:   #verify if there are command in queue, otherwise takes priority
-                    message = None
-                    async with self._ws_lock:
-                        try:
-                            message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
-                        except asyncio.TimeoutError:
-                            continue  # keep the listening going 
+                message = None
+                async with self._ws_lock:
+                    try:
+                        message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
+                    except asyncio.TimeoutError:
+                        continue  # keep the listening going 
 
-                    if message:         #if a message is received, handle it
-                        message = json.loads(message)
-                        await self.handle_message(message)
-                else:
-                    await asyncio.sleep(0.1)  # Delay to avoid stopping the loop
+                if message:         #if a message is received, handle it
+                    message = json.loads(message)
+                    await self.handle_message(message)
             except websockets.exceptions.ConnectionClosed:
                 self._logger.error("WebSocket close. trying reconnection")
                 self.running = False
@@ -143,40 +142,44 @@ class WebSocketManager:
     async def handle_message(self, message):
 
         #extract the message
-        id = message.get("ID", 0)
-        payload = message.get("PAYLOAD", {})
-        data = payload.get('Homeassistant', {})
+        # payload = message.get("PAYLOAD", {})
+        # data = payload.get('Homeassistant', {})
+
+        data = message.get("PAYLOAD", {})
 
         # sort received message for the right callback
-        if "RESULTS" in data:
-            output_id = status["ID"]
-            if output_id in self._pending_commands:
-                self._pending_commands[output_id].set()  # Segnala il completamento
-                del self._pending_commands[output_id]  # Rimuovi il comando completato
+        if message["CMD"] == "CMD_USR_RES":
+            if self._pending_commands:
+                future, command_data = self._pending_commands.popitem(last=False)  # Prende il comando più vecchio
+                self._logger.info(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
+                future.set_result(True)  # Segna il comando come eseguito con successo
+            else:
+                self._logger.warning("Received CMD_USR_RES but no commands were pending")
 
 
-        if "STATUS_OUTPUTS" in data:
-            for callback in self.listeners["lights"]:
-                await callback(data["STATUS_OUTPUTS"])
-            for callback in self.listeners["switches"]:
-                await callback(data["STATUS_OUTPUTS"])
-        if "STATUS_BUS_HA_SENSORS" in data:
-            #self._logger.debug(f"Updating state for domus {data['STATUS_BUS_HA_SENSORS']}")
-            for callback in self.listeners["domus"]:
-                await callback(data["STATUS_BUS_HA_SENSORS"])
-        if "STATUS_POWER_LINES" in data:
-            #BUG in Ksenia ws. Powerline updated every x seconds even if value does not change.
-            #self._logger.debug(f"Updating state for power lines {data["STATUS_POWER_LINES"]}")
-            for callback in self.listeners["powerlines"]:
-                await callback(data["STATUS_POWER_LINES"])
-        if "STATUS_PARTITIONS" in data:
-            self._logger.debug(f"Updating state for partitions {data['STATUS_PARTITIONS']}")
-            for callback in self.listeners["partitions"]:
-                await callback(data["STATUS_PARTITIONS"])
-        if "STATUS_ZONES" in data:
-            self._logger.debug(f"Updating state for zones {data['STATUS_ZONES']}")
-            for callback in self.listeners["zones"]:
-                await callback(data["STATUS_ZONES"])
+        elif message["CMD"] == "REALTIME":
+            if "STATUS_OUTPUTS" in data:
+                for callback in self.listeners["lights"]:
+                    await callback(data["STATUS_OUTPUTS"])
+                for callback in self.listeners["switches"]:
+                    await callback(data["STATUS_OUTPUTS"])
+            if "STATUS_BUS_HA_SENSORS" in data:
+                #self._logger.debug(f"Updating state for domus {data['STATUS_BUS_HA_SENSORS']}")
+                for callback in self.listeners["domus"]:
+                    await callback(data["STATUS_BUS_HA_SENSORS"])
+            if "STATUS_POWER_LINES" in data:
+                #BUG in Ksenia ws. Powerline updated every x seconds even if value does not change.
+                #self._logger.debug(f"Updating state for power lines {data["STATUS_POWER_LINES"]}")
+                for callback in self.listeners["powerlines"]:
+                    await callback(data["STATUS_POWER_LINES"])
+            if "STATUS_PARTITIONS" in data:
+                self._logger.debug(f"Updating state for partitions {data['STATUS_PARTITIONS']}")
+                for callback in self.listeners["partitions"]:
+                    await callback(data["STATUS_PARTITIONS"])
+            if "STATUS_ZONES" in data:
+                self._logger.debug(f"Updating state for zones {data['STATUS_ZONES']}")
+                for callback in self.listeners["zones"]:
+                    await callback(data["STATUS_ZONES"])
 
 
     #this function is used to register a new entity to the listener
@@ -191,78 +194,79 @@ class WebSocketManager:
     async def process_command_queue(self):
         self._logger.debug(f"command queue started")
         while self._running:
-            command_data = await self._command_queue.get() #search for the next command, if available
-            output_id, command, future = command_data["output_id"],command_data["command"], command_data["future"]
-            cmd_ok=False
 
-            #self._logger.debug(f"COMMAND QUEUE - Debugging output: output_id={output_id}, command={command} ({type(command)})")
-            try:
-                async with self._ws_lock:
-                    self._command_in_progress = True  # set priority to pause listener process
-                    #3 types of command -> turing on/off output, dimmer or executing scenarios
-                    if command == "SCENARIO":
-                        self._logger.debug(f"COMMAND QUEUE - executing scenario n {output_id}")
-                        cmd_ok = await exeScenario(
-                            self._ws,
-                            self._loginId,
-                            self._pin,
-                            output_id,
-                            self._logger
-                        )
-                    elif command in ("ON", "OFF"):
-                        self._logger.debug(f"COMMAND QUEUE - Sending command {command} to {output_id}")
-                        cmd_ok = await setOutput(
-                            self._ws,
-                            self._loginId,
-                            self._pin,
-                            output_id,
-                            command,
-                            self._logger
-                        )
-                    elif isinstance(command, int):      #dimmer
-                        self._logger.debug(f"COMMAND QUEUE - Sending command for dimmer {str(command)} to {output_id}")
-                        cmd_ok = await setOutput(
-                            self._ws,
-                            self._loginId,
-                            self._pin,
-                            output_id,
-                            str(command),
-                            self._logger
-                        )
+            future = await self._command_queue.get()
+            if future in self._pending_commands:
+                command_data = self._pending_commands[future]
+                output_id, command = command_data["output_id"], command_data["command"]
 
-                    if cmd_ok:
-                        self._logger.info(f"COMMAND QUEUE -  Command {str(command)} for {output_id} has been executed.")
-                        future.set_result(True)
-                    else:
-                        self._logger.error(f"COMMAND QUEUE -  Command {str(command)} for {output_id} failed")
-                        future.set_result(False)
+                #self._logger.debug(f"COMMAND QUEUE - Debugging output: output_id={output_id}, command={command} ({type(command)})")
+                try:
+                    async with self._ws_lock:
+                        #3 types of command -> turing on/off output, dimmer or executing scenarios
+                        if command == "SCENARIO":
+                            self._logger.debug(f"COMMAND QUEUE - executing scenario n {output_id}")
+                            await exeScenario(
+                                self._ws,
+                                self._loginId,
+                                self._pin,
+                                output_id,
+                                self._logger
+                            )
+                        elif command in ("ON", "OFF"):
+                            self._logger.debug(f"COMMAND QUEUE - Sending command {command} to {output_id}")
+                            await setOutput(
+                                self._ws,
+                                self._loginId,
+                                self._pin,
+                                output_id,
+                                command,
+                                self._logger
+                            )
+                        elif isinstance(command, int):      #dimmer
+                            self._logger.debug(f"COMMAND QUEUE - Sending command for dimmer {str(command)} to {output_id}")
+                            await setOutput(
+                                self._ws,
+                                self._loginId,
+                                self._pin,
+                                output_id,
+                                str(command),
+                                self._logger
+                            )
+
                         # retry could be implemented
-            except Exception as e:
-                self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {str(command)} for {output_id}: {e}")
-                future.set_exception(e)
-            finally:
-                self._command_in_progress = False  # release priority to let listener get back to work
+                except Exception as e:
+                    self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {str(command)} for {output_id}: {e}")
 
 
     #this function send the command to the queue
-    async def send_command(self, output_id, command, future):
+    async def send_command(self, output_id, command):
+
+        future = asyncio.Future()
         command_data = {
             "output_id": output_id,
             "command": command.upper() if isinstance(command, str) else command,  #uppercase for ksenia websocket message
             "future": future
         }
 
-        self._pending_commands[output_id] = asyncio.Event()
+        self._pending_commands[future] = command_data
 
-        await self._command_queue.put(command_data)
+        await self._command_queue.put(future)
 
-        # Aspetta la conferma dal WebSocket
-        success = await asyncio.wait_for(self._pending_commands[output_id].wait(), timeout=5)
+        self._logger.debug(f"send_command -  command add to queue  {str(command)} for {output_id}: {e}")
 
-        if success:
-            future.set_result(True)
-        else:
-            future.set_result(False)
+        try:
+            # Aspetta la conferma dal WebSocket
+            success = await asyncio.wait_for(future, timeout=10)
+
+            if not success:
+                self._logger.warning(f"Command {command} for {output_id} timed out")
+                return False
+        except asyncio.TimeoutError as e:
+            self._logger.warning(f"send_command - Timeout waiting for confirmation of command {command} for {output_id}")
+            return False
+        
+        return True
 
 
     #this function close the websocket connection
@@ -275,24 +279,23 @@ class WebSocketManager:
    #Turn on output
     async def turnOnOutput(self, output_id, brightness=None):
         try:
-            future = asyncio.Future()
+            
             if(brightness):
-                await self.send_command(output_id, brightness,future) #send command to turn "ON" an output with brightness
+                await self.send_command(output_id, brightness) #send command to turn "ON" an output with brightness
             else:
-                await self.send_command(output_id, "ON",future)  #send command to turn "ON" an output
-            return await future
+                await self.send_command(output_id, "ON")  #send command to turn "ON" an output
         except Exception as e:
-            self._logger.error(f"Error while sending command to queue with id {output_id}: {e}")
+            self._logger.error(f"turnOnOutput - Error while sending command to queue with id {output_id}: {e}")
             return False
 
     #Turn off output
     async def turnOffOutput(self, output_id):
         try:
             future = asyncio.Future()
-            await self.send_command(output_id, "OFF", future)  #send command to turn "OFF" an output
+            await self.send_command(output_id, "OFF")  #send command to turn "OFF" an output
             return await future
         except Exception as e:
-            self._logger.error(f"Error while sending command to queue {output_id}: {e}")
+            self._logger.error(f"turnOffOutput - Error while sending command to queue {output_id}: {e}")
             return False
         
     async def executeScenario(self, scenario_id):

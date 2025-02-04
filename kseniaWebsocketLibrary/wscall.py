@@ -100,16 +100,16 @@ async def setOutput(websocket, login_id, pin, output_id, status, logger):
     cmd_ok = False
     try:
         await websocket.send(json_cmd)
-        json_resp_states = await websocket.recv()
-        response = json.loads(json_resp_states)
-        logger.debug(f"WSCALL - response: {response}")
-        if response["PAYLOAD"]["RESULT"] == "OK":
-            cmd_ok = True
+        #json_resp_states = await websocket.recv()
+        # response = json.loads(json_resp_states)
+        # logger.debug(f"WSCALL - response: {response}")
+        # if response["PAYLOAD"]["RESULT"] == "OK":
+        #     cmd_ok = True
     except Exception as e:
         logger.error(f"WSCALL -  setOutput call failed: {e}")
-        logger.error(response)
+        # logger.error(response)
 
-    return cmd_ok
+    # return cmd_ok
 
 
 #this function execute the relative scenario
