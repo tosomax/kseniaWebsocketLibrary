@@ -153,7 +153,7 @@ class WebSocketManager:
         if message["CMD"] == "CMD_USR_RES":
             self._logger.debug(f"yoda {self._pending_commands}")
             if self._pending_commands:
-                self._logger.debug(f"id_msg: {message["ID"]} - id_pending: {self._pending_commands.keys} -tipo msg {type(message["ID"])}")
+                self._logger.debug(f"id_msg: {message["ID"]} - id_pending: {self._pending_commands.keys()} -tipo msg {type(message["ID"])}")
                 command_data = self._pending_commands[int(message["ID"])]
                 self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
                 command_data["future"].set_result(True)  # Segna il comando come eseguito con successo
@@ -264,7 +264,7 @@ class WebSocketManager:
 
         try:
             # Aspetta la conferma dal WebSocket
-            success = await asyncio.wait_for(future, timeout=10)
+            success = await asyncio.wait_for(future, timeout=60)
 
             if not success:
                 self._logger.warning(f"Command {command} for {output_id} timed out")
