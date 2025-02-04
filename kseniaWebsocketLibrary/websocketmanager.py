@@ -151,7 +151,7 @@ class WebSocketManager:
         if message["CMD"] == "CMD_USR_RES":
             if self._pending_commands:
                 future, command_data = self._pending_commands.popitem(last=False)  # Prende il comando più vecchio
-                self._logger.info(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
+                self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
                 future.set_result(True)  # Segna il comando come eseguito con successo
             else:
                 self._logger.warning("Received CMD_USR_RES but no commands were pending")
@@ -243,6 +243,7 @@ class WebSocketManager:
     async def send_command(self, output_id, command):
 
         future = asyncio.Future()
+
         command_data = {
             "output_id": output_id,
             "command": command.upper() if isinstance(command, str) else command,  #uppercase for ksenia websocket message
@@ -262,8 +263,11 @@ class WebSocketManager:
             if not success:
                 self._logger.warning(f"Command {command} for {output_id} timed out")
                 return False
-        except asyncio.TimeoutError as e:
+        except asyncio.TimeoutError:
             self._logger.warning(f"send_command - Timeout waiting for confirmation of command {command} for {output_id}")
+            return False
+        except Exception as e:  # Corretto per evitare problemi con variabile 'e'
+            self._logger.error(f"Error while waiting for command {command} for {output_id}: {e}")
             return False
         
         return True
@@ -281,9 +285,13 @@ class WebSocketManager:
         try:
             
             if(brightness):
-                await self.send_command(output_id, brightness) #send command to turn "ON" an output with brightness
+                success = await self.send_command(output_id, brightness) #send command to turn "ON" an output with brightness
             else:
-                await self.send_command(output_id, "ON")  #send command to turn "ON" an output
+                success = await self.send_command(output_id, "ON")  #send command to turn "ON" an output
+            if not success:
+                self._logger.warning(f"Failed to turn off output {output_id}.")
+                return False
+            return True
         except Exception as e:
             self._logger.error(f"turnOnOutput - Error while sending command to queue with id {output_id}: {e}")
             return False
@@ -291,13 +299,17 @@ class WebSocketManager:
     #Turn off output
     async def turnOffOutput(self, output_id):
         try:
-            future = asyncio.Future()
-            await self.send_command(output_id, "OFF")  #send command to turn "OFF" an output
-            return await future
+            success = await self.send_command(output_id, "OFF")
+            if not success:
+                self._logger.warning(f"Failed to turn off output {output_id}.")
+                return False
+            return True
         except Exception as e:
             self._logger.error(f"turnOffOutput - Error while sending command to queue {output_id}: {e}")
             return False
-        
+    
+
+
     async def executeScenario(self, scenario_id):
         try:
             future = asyncio.Future()
