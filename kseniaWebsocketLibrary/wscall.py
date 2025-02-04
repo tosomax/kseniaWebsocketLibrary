@@ -104,14 +104,11 @@ async def setOutput(websocket, login_id, pin, command_data, queue, logger):
 
 
         #delete item if future not satisfied
-        await asyncio.wait_for(command_data["future"], 60)
+        asyncio.create_task(wait_for_future(command_data["future"], cmd_id, queue, logger))
 
-    except asyncio.TimeoutError:
-            logger.error(f"Command {cmd_id} timed out - deleting from pending queue")
-            queue.pop(str(cmd_id))
     except Exception as e:
         logger.error(f"WSCALL -  setOutput call failed: {e}")
-        queue.pop(str(cmd_id))
+        queue.pop(str(cmd_id), None)
 
 
 
@@ -143,3 +140,12 @@ async def exeScenario(websocket, login_id, pin, scenario_id, logger):
     return cmd_ok
 
 
+
+async def wait_for_future(future, cmd_id, queue, logger):
+    try:
+        await asyncio.wait_for(future, 60) 
+    except asyncio.TimeoutError:
+        logger.error(f"Command {cmd_id} timed out - deleting from pending queue")
+        queue.pop(str(cmd_id), None)
+    except Exception as e:
+        logger.error(f"Error in wait_for_future for command {cmd_id}: {e}")
