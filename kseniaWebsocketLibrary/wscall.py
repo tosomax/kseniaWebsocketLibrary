@@ -99,7 +99,7 @@ async def setOutput(websocket, login_id, pin, command_data, queue, logger):
     )
     try:
         command_data["command_id"]=cmd_id
-        queue[cmd_id]= command_data
+        queue[str(cmd_id)]= command_data
         await websocket.send(json_cmd)
 
     except Exception as e:
