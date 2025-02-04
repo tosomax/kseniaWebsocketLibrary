@@ -142,11 +142,10 @@ class WebSocketManager:
     async def handle_message(self, message):
 
         #extract the message
-        # payload = message.get("PAYLOAD", {})
-        # data = payload.get('Homeassistant', {})
+        payload = message.get("PAYLOAD", {})
+        data = payload.get('Homeassistant', {})
 
-        data = message.get("PAYLOAD", {})
-        self._logger.debug(f"data: {data}")
+        self._logger.debug(f"message: {message}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
@@ -254,7 +253,7 @@ class WebSocketManager:
 
         await self._command_queue.put(command_data)
 
-        self._logger.debug(f"send_command -  command add to queue  {str(command)} for {output_id}: {e}")
+        self._logger.debug(f"send_command -  command add to queue  {str(command)} for {output_id}")
 
         try:
             # Aspetta la conferma dal WebSocket
