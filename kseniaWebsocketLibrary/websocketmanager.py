@@ -133,7 +133,6 @@ class WebSocketManager:
 
                 if message:         #if a message is received, handle it
                     message = json.loads(message)
-                    self._logger.debug(f"message received: {message}")
                     await self.handle_message(message)
             except websockets.exceptions.ConnectionClosed:
                 self._logger.error("WebSocket close. trying reconnection")
@@ -150,7 +149,7 @@ class WebSocketManager:
         payload = message.get("PAYLOAD", {})
         data = payload.get('Homeassistant', {})
 
-        self._logger.debug(f"message: {message}")
+        #self._logger.debug(f"message: {message}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
