@@ -422,6 +422,8 @@ class WebSocketManager:
                 "T_OUT": sys["TEMP"]["OUT"],
             }
             systems.append(systemData)
+        
+        self._logger.debug(f"{sysList} ---- {systems}")
         return systems
 
 
