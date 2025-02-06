@@ -15,7 +15,7 @@ class WebSocketManager:
         self._ip = ip
         self._pin = pin
         self._ws = None
-        self.listeners = {"lights": [], "domus": [], "switches" :[], "powerlines": [], "partitions": [],"zones":[]}
+        self.listeners = {"lights": [], "domus": [], "switches" :[], "powerlines": [], "partitions": [],"zones":[], "systems": []}
         self._logger = logger
         self._running = False       #this flag is used to keep process alives
         self._loginId = None
@@ -185,6 +185,10 @@ class WebSocketManager:
                 self._logger.debug(f"Updating state for zones {data['STATUS_ZONES']}")
                 for callback in self.listeners["zones"]:
                     await callback(data["STATUS_ZONES"])
+            if "STATUS_SYSTEM" in data:
+                self._logger.debug(f"Updating state for system {data['STATUS_SYSTEM']}")
+                for callback in self.listeners["systems"]:
+                    await callback(data["STATUS_SYSTEM"])
 
 
 
@@ -404,6 +408,21 @@ class WebSocketManager:
 
         #self._logger.info(f"{sName} - Combined  with states: %s", sensor_with_states)
         return sensor_with_states
+
+    #this function get system status from ws
+    async def getSystem(self):
+
+        sysList = self._readData["STATUS_SYSTEM"]
+        systems = []
+        for sys in sysList:
+            systemData ={
+                "ID": sys["ID"],
+                "ARM": sys["ARM"]["D"],
+                "T_IN": sys["TEMP"]["IN"],
+                "T_OUT": sys["TEMP"]["OUT"],
+            }
+            systems.append(systemData)
+        return systems
 
 
     #TEST CONNECTION
