@@ -113,7 +113,7 @@ async def setOutput(websocket, login_id, pin, command_data, queue, logger):
 
 
 #this function execute the relative scenario
-async def exeScenario(websocket, login_id, pin, scenario_id, logger):
+async def exeScenario(websocket, login_id, pin, command_data, queue, logger):
     logger.info("WSCALL - trying executing scenario")
     global cmd_id
     cmd_id = cmd_id + 1
@@ -125,19 +125,22 @@ async def exeScenario(websocket, login_id, pin, scenario_id, logger):
         + '","PIN":"'
         + pin
         + '","SCENARIO":{"ID":"'
-        + str(scenario_id)
+        + str(command_data["output_id"])
         + '"}}, "TIMESTAMP":"'
         + str(int(time.time()))
         + '", "CRC_16":"0x0000"}'
     )
-    await websocket.send(json_cmd)
-    json_resp = await websocket.recv()
-    response = json.loads(json_resp)
-    logger.info(f"WSCALL - executed scenario {response} ")
-    cmd_ok = False
-    if response["PAYLOAD"]["RESULT"] == "OK":
-        cmd_ok = True
-    return cmd_ok
+    try:
+        command_data["command_id"]=cmd_id
+        queue[str(cmd_id)]= command_data
+        await websocket.send(json_cmd)
+
+        #delete item if future not satisfied
+        asyncio.create_task(wait_for_future(command_data["future"], cmd_id, queue, logger))
+
+    except Exception as e:
+        logger.error(f"WSCALL -  executeScenario call failed: {e}")
+        queue.pop(str(cmd_id), None)
 
 
 

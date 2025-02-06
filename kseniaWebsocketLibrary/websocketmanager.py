@@ -315,9 +315,11 @@ class WebSocketManager:
 
     async def executeScenario(self, scenario_id):
         try:
-            future = asyncio.Future()
-            await self.send_command(scenario_id, "SCENARIO") #send command execute "SCENARIO"
-            return await future
+            success = self.send_command(scenario_id, "SCENARIO") #send command execute "SCENARIO"
+            if not success:
+                self._logger.error(f"Error while sending scenario to queue  {scenario_id}: {e}")
+                return False
+            return True
         except Exception as e:
             self._logger.error(f"Error while sending scenario to queue  {scenario_id}: {e}")
             return False
