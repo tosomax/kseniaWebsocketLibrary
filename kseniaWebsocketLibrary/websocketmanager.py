@@ -411,21 +411,21 @@ class WebSocketManager:
 
     #this function get system status from ws
     async def getSystem(self):
-        self._logger.debug(f"trying adding system {self._readData['STATUS_SYSTEM']} {self._readData}")
+        self._logger.debug(f"trying adding system {self._readData}")
 
-        sysList = self._readData["STATUS_SYSTEM"]
-        systems = []
-        for sys in sysList:
-            systemData ={
-                "ID": sys["ID"],
-                "ARM": sys["ARM"]["D"],
-                "T_IN": sys["TEMP"]["IN"],
-                "T_OUT": sys["TEMP"]["OUT"],
-            }
-            systems.append(systemData)
+        # sysList = self._readData["STATUS_SYSTEM"]
+        # systems = []
+        # for sys in sysList:
+        #     systemData ={
+        #         "ID": sys["ID"],
+        #         "ARM": sys["ARM"]["D"],
+        #         "T_IN": sys["TEMP"]["IN"],
+        #         "T_OUT": sys["TEMP"]["OUT"],
+        #     }
+        #     systems.append(systemData)
         
-        self._logger.debug(f"{sysList} ---- {systems}")
-        return systems
+        # self._logger.debug(f"{sysList} ---- {systems}")
+        # return systems
 
 
     #TEST CONNECTION
