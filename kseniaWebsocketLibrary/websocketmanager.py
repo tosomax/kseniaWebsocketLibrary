@@ -149,7 +149,7 @@ class WebSocketManager:
         payload = message.get("PAYLOAD", {})
         data = payload.get('Homeassistant', {})
 
-        #self._logger.debug(f"message: {message}")
+        self._logger.debug(f"message: {message}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
