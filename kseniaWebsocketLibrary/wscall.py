@@ -6,7 +6,7 @@ from .crc import addCRC
 
 #types of ksenia information required
 
-read_types ='["OUTPUTS","BUS_HAS","SCENARIOS","POWER_LINES","PARTITIONS","ZONES"]'
+read_types ='["OUTPUTS","BUS_HAS","SCENARIOS","POWER_LINES","PARTITIONS","ZONES","STATUS_SYSTEM"]'
 realtime_types='["STATUS_OUTPUTS","STATUS_BUS_HA_SENSORS","STATUS_POWER_LINES","STATUS_PARTITIONS","STATUS_ZONES","STATUS_SYSTEM"]'
 
 
