@@ -48,6 +48,7 @@ It provides the following methods:
 - `getSwitches()`: Retrieves the list of switches from the system.
 - `getSensor(sensor_name)`: Retrieves the list of sensors based on the provided sensor name.
 - `getScenarios()`: Retrieves the list of scenarios from the system.
+- `getSystem()`: Retrieves the list of main units from the system.
 - `turnOnOutput(output_id)`: Turns on the output with the specified ID.
 - `turnOffOutput(output_id)`: Turns off the output with the specified ID.
 - `executeScenario(scenario_id)`: Executes the scenario with the specified ID.
