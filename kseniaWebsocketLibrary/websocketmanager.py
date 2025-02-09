@@ -121,27 +121,33 @@ class WebSocketManager:
     async def listener(self):
         self._logger.info("starting listener")
 
-
         while self._running:
-            try:
-                message = None
-                self._logger.debug("Waiting for new message...")
-                async with self._ws_lock:
-                    try:
-                        message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
-                    except asyncio.TimeoutError:
-                        continue  # keep the listening going 
+            message = None
+            self._logger.debug("Waiting for new message...")
+            async with self._ws_lock:
+                try:
+                    message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
+                    self._logger.debug(f"Received WebSocket message: {message}")
+                except asyncio.TimeoutError:
+                    self._logger.debug("Listener timeout, continuing...")
+                    continue
+                except websockets.exceptions.ConnectionClosed:
+                    self._logger.error("WebSocket close. trying reconnection")
+                    self.running = False
+                    if self._connSecure:
+                        await self.connectSecure()
+                    else:
+                        await self.connect()
+                except Exception as e:
+                    self._logger.error(f"Listener error: {e}")
+                    break
 
-                if message:         #if a message is received, handle it
-                    message = json.loads(message)
-                    await self.handle_message(message)
-            except websockets.exceptions.ConnectionClosed:
-                self._logger.error("WebSocket close. trying reconnection")
-                self.running = False
-                if self._connSecure:
-                    await self.connectSecure()
-                else:
-                    await self.connect()
+
+            if message:         #if a message is received, handle it
+                message = json.loads(message)
+                await self.handle_message(message)
+
+
 
 
     async def handle_message(self, message):
@@ -292,7 +298,7 @@ class WebSocketManager:
    #Turn on output
     async def turnOnOutput(self, output_id, brightness=None):
         try:
-            
+            self._logger.debug(f"WebSocket closed? {self._ws.closed}")
             if(brightness):
                 success = await self.send_command(output_id, brightness) #send command to turn "ON" an output with brightness
             else:
