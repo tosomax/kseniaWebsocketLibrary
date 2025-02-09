@@ -127,7 +127,7 @@ class WebSocketManager:
                 try:
                     message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
                 except asyncio.TimeoutError:
-                    self._logger.debug("Listener timeout, continuing...")
+                    #self._logger.debug("Listener timeout, continuing...")
                     continue
                 except websockets.exceptions.ConnectionClosed:
                     self._logger.error("WebSocket close. trying reconnection")
@@ -189,7 +189,7 @@ class WebSocketManager:
                 for callback in self.listeners["partitions"]:
                     await callback(data["STATUS_PARTITIONS"])
             if "STATUS_ZONES" in data:
-                self._logger.debug(f"Updating state for zones {data['STATUS_ZONES']}")
+                #self._logger.debug(f"Updating state for zones {data['STATUS_ZONES']}")
                 for callback in self.listeners["zones"]:
                     await callback(data["STATUS_ZONES"])
             if "STATUS_SYSTEM" in data:
