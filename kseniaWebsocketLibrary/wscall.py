@@ -102,7 +102,6 @@ async def setOutput(websocket, login_id, pin, command_data, queue, logger):
         queue[str(cmd_id)]= command_data
         await websocket.send(json_cmd)
         logger.debug(f"queue updated {queue}")
-        logger.debug(f"WebSocket 22closed? {websocket.closed}")
 
         #delete item if future not satisfied
         asyncio.create_task(wait_for_future(command_data["future"], cmd_id, queue, logger))

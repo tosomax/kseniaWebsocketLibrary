@@ -299,7 +299,6 @@ class WebSocketManager:
    #Turn on output
     async def turnOnOutput(self, output_id, brightness=None):
         try:
-            self._logger.debug(f"WebSocket closed? {self._ws.closed}")
             if(brightness):
                 success = await self.send_command(output_id, brightness) #send command to turn "ON" an output with brightness
             else:
