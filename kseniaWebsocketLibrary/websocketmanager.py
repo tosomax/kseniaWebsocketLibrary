@@ -218,6 +218,7 @@ class WebSocketManager:
             output_id, command = command_data["output_id"], command_data["command"]
 
             try:
+                self._logger.debug(f"new command found - acquiring lock")
                 async with self._ws_lock:
                     #3 types of command -> turing on/off output, dimmer or executing scenarios
                     if command == "SCENARIO":
@@ -251,7 +252,7 @@ class WebSocketManager:
                             self._pending_commands,
                             self._logger
                         )
-
+                    self._logger.debug(f"command executed - releasing lock")
                     # retry could be implemented
             except Exception as e:
                 self._logger.error(f"COMMAND QUEUE -  Error during command elaboration: {str(command)} for {output_id}: {e}")
