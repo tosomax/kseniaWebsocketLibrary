@@ -160,6 +160,7 @@ class WebSocketManager:
                 command_data = self._pending_commands[message["ID"]]
                 command_data["future"].set_result(True)  # Segna il comando come eseguito con successo
                 self._pending_commands.pop(message["ID"])
+                self._logger.debug(f"new pending queue {self._pending_commands}  cmd queue {self._command_queue}")
             else:
                 self._logger.warning("Received CMD_USR_RES but no commands were pending")
         elif message["CMD"] == "REALTIME":
@@ -186,7 +187,7 @@ class WebSocketManager:
                 for callback in self.listeners["zones"]:
                     await callback(data["STATUS_ZONES"])
             if "STATUS_SYSTEM" in data:
-                self._logger.debug(f"Updating state for system {data['STATUS_SYSTEM']}")
+                #self._logger.debug(f"Updating state for system {data['STATUS_SYSTEM']}")
                 for callback in self.listeners["systems"]:
                     await callback(data["STATUS_SYSTEM"])
 
