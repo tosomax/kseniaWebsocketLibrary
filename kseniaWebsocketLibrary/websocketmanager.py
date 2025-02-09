@@ -154,18 +154,18 @@ class WebSocketManager:
         payload = message.get("PAYLOAD", {})
         data = payload.get('Homeassistant', {})
 
-        self._logger.debug(f"message: {message}")
+        #self._logger.debug(f"message: {message}")
 
         # sort received message for the right callback
         if message["CMD"] == "CMD_USR_RES":
             if self._pending_commands:
                 command_data = self._pending_commands[message["ID"]]
-                self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
+                #self._logger.debug(f"Received result for command {command_data['command']} (Output ID: {command_data['output_id']})")
 
                 command_data = self._pending_commands[message["ID"]]
                 command_data["future"].set_result(True)  # Segna il comando come eseguito con successo
                 self._pending_commands.pop(message["ID"])
-                self._logger.debug(f"new pending queue {self._pending_commands}  cmd queue {self._command_queue}")
+                #self._logger.debug(f"new pending queue {self._pending_commands}  cmd queue {self._command_queue}")
             else:
                 self._logger.warning("Received CMD_USR_RES but no commands were pending")
         elif message["CMD"] == "REALTIME":
