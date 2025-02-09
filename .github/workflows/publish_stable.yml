@@ -1,0 +1,53 @@
+name: Publish Python Package
+
+on:
+  push:
+    branches:
+      - main  # Esegui il workflow solo sui push alla branch "main"
+  workflow_dispatch:  # Consente di eseguire manualmente il workflow
+
+permissions:
+  contents: write  # Permessi per operazioni di scrittura su GitHub
+  
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9  # Specifica la versione di Python
+
+    - name: Configure Git
+      run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions Bot"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine bump2version
+        
+    - name: Set version to 1.0.0
+      id: version
+      run: |
+        bump2version --new-version 1.0.0 --allow-dirty --verbose
+        git push origin main --tags
+        echo "::set-output name=version::$(python setup.py --version)"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build the package
+      run: |
+        python -m build
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: "__token__"
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        python -m twine upload dist/*
