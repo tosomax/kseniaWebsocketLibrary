@@ -123,11 +123,9 @@ class WebSocketManager:
 
         while self._running:
             message = None
-            self._logger.debug("Waiting for new message...")
             async with self._ws_lock:
                 try:
                     message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
-                    self._logger.debug(f"Received WebSocket message: {message}")
                 except asyncio.TimeoutError:
                     self._logger.debug("Listener timeout, continuing...")
                     continue
@@ -198,8 +196,6 @@ class WebSocketManager:
                 #self._logger.debug(f"Updating state for system {data['STATUS_SYSTEM']}")
                 for callback in self.listeners["systems"]:
                     await callback(data["STATUS_SYSTEM"])
-            self._logger.debug(f"Gone over realtime message ")
-        self._logger.debug(f"Gone over updating message")
 
 
 

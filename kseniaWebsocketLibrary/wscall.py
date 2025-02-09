@@ -101,11 +101,9 @@ async def setOutput(websocket, login_id, pin, command_data, queue, logger):
         command_data["command_id"]=cmd_id
         queue[str(cmd_id)]= command_data
         await websocket.send(json_cmd)
-        logger.debug(f"queue updated {queue}")
 
         #delete item if future not satisfied
         asyncio.create_task(wait_for_future(command_data["future"], cmd_id, queue, logger))
-        logger.debug(f"going over timeout task")
 
     except Exception as e:
         logger.error(f"WSCALL -  setOutput call failed: {e}")
