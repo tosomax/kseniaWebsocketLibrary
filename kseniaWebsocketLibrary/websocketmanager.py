@@ -140,7 +140,7 @@ class WebSocketManager:
                         await self.connect()
                 except Exception as e:
                     self._logger.error(f"Listener error: {e}")
-                    break
+                    continue  
 
 
             if message:         #if a message is received, handle it
@@ -172,6 +172,7 @@ class WebSocketManager:
                 self._logger.warning("Received CMD_USR_RES but no commands were pending")
         elif message["CMD"] == "REALTIME":
             if "STATUS_OUTPUTS" in data:
+                self._logger.debug(f"Updating state for lights {data["STATUS_OUTPUTS"]} ")
                 for callback in self.listeners["lights"]:
                     await callback(data["STATUS_OUTPUTS"])
                 for callback in self.listeners["switches"]:
@@ -197,6 +198,8 @@ class WebSocketManager:
                 #self._logger.debug(f"Updating state for system {data['STATUS_SYSTEM']}")
                 for callback in self.listeners["systems"]:
                     await callback(data["STATUS_SYSTEM"])
+            self._logger.debug(f"Gone over realtime message ")
+        self._logger.debug(f"Gone over updating message")
 
 
 
