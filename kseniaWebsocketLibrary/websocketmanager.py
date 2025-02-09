@@ -125,6 +125,7 @@ class WebSocketManager:
         while self._running:
             try:
                 message = None
+                self._logger.debug("Waiting for new message...")
                 async with self._ws_lock:
                     try:
                         message = await asyncio.wait_for(self._ws.recv(), timeout=3) #fix timeout if needed
