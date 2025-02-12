@@ -47,8 +47,11 @@ class WebSocketManager:
                 self._ws = await websockets.connect(uri, subprotocols=['KS_WSOCK'])      
                 self._loginId = await ws_login(self._ws, self._pin, self._logger)
                 if self._loginId < 0:
-                    self._logger.error("WebSocket login error")
-                    raise Exception("Login failed")
+                    self._logger.error("WebSocket login error, retrying...")
+                    self._retries += 1
+                    await asyncio.sleep(self._retry_delay)
+                    self._retry_delay *= 2 
+                    continue  
                 self._logger.info(f"Connected to websocket - ID {self._loginId}")
                 async with self._ws_lock:
                     self._logger.info("extracting inital data")
@@ -87,8 +90,12 @@ class WebSocketManager:
                 self._ws = await websockets.connect(uri,ssl=ssl_context, subprotocols=['KS_WSOCK'])       #secure connection
                 self._loginId = await ws_login(self._ws, self._pin, self._logger)
                 if self._loginId < 0:
-                    self._logger.error("WebSocket login error")
-                    raise Exception("Login failed")
+                    self._logger.error("WebSocket login error, retrying...")
+                    self._retries += 1
+                    await asyncio.sleep(self._retry_delay)
+                    self._retry_delay *= 2 
+                    continue  
+
                 self._logger.info(f"Connected to websocket - ID {self._loginId}")
                 async with self._ws_lock:
                     self._logger.info("extracting inital data")
