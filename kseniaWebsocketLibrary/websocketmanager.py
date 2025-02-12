@@ -130,12 +130,16 @@ class WebSocketManager:
                     #self._logger.debug("Listener timeout, continuing...")
                     continue
                 except websockets.exceptions.ConnectionClosed:
-                    self._logger.error("WebSocket close. trying reconnection")
+
                     self.running = False
-                    if self._connSecure:
-                        await self.connectSecure()
+                    if self._retries < self._max_retries:
+                        self._logger.error("WebSocket close. trying reconnection")
+                        if self._connSecure:
+                            await self.connectSecure()
+                        else:
+                            await self.connect()
                     else:
-                        await self.connect()
+                        self._logger.error("WebSocket close. Maximum retries reached")
                 except Exception as e:
                     self._logger.error(f"Listener error: {e}")
                     continue  
