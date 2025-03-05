@@ -15,7 +15,7 @@ cmd_id = 1
 #ws login call
 async def ws_login(websocket, pin, _LOGGER):
     global cmd_id
-    json_cmd = addCRC('{"SENDER":"Homeassistant", "RECEIVER":"", "CMD":"LOGIN", "ID": "1", "PAYLOAD_TYPE":"UNKNOWN", "PAYLOAD":{"PIN":"' + pin + '"}, "TIMESTAMP":"' + str(int(time.time())) + '", "CRC_16":"0x0000"}')
+    json_cmd = addCRC('{"SENDER":"Homeassistant", "RECEIVER":"", "CMD":"LOGIN", "ID": "1", "PAYLOAD_TYPE":"USER", "PAYLOAD":{"PIN":"' + pin + '"}, "TIMESTAMP":"' + str(int(time.time())) + '", "CRC_16":"0x0000"}')
     
     try:
         await websocket.send(json_cmd)
