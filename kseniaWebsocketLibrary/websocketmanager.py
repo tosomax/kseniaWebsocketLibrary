@@ -4,9 +4,14 @@ import json, time
 import ssl
 from kseniaWebsocketLibrary.wscall import ws_login,realtime, readData, exeScenario, setOutput
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2) 
-ssl_context.verify_mode = ssl.CERT_NONE
-ssl_context.options |= 0x4
+# Modified SSL Context for Lares compatibility
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)  # Force TLS 1.2
+ssl_context.check_hostname = False                   # Disable hostname verification
+ssl_context.verify_mode = ssl.CERT_NONE              # Ignore self-signed certificates
+ssl_context.set_ciphers("AES128-SHA:DEFAULT@SECLEVEL=1")  # Match server's cipher suite
+ssl_context.options |= ssl.OP_LEGACY_SERVER_CONNECT  # Allow insecure renegotiation
+ssl_context.options |= ssl.OP_NO_TLSv1_3             # Disable TLS 1.3 (server uses TLS 1.2)
+ssl_context.logging = True  # Enable SSL debug logs
 
 
 
