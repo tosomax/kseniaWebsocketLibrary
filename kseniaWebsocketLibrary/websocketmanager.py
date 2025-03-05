@@ -129,7 +129,6 @@ class WebSocketManager:
         self._logger.critical("Maximum retries reached. WebSocket connection failed.")
 
         
-
     async def listener(self):
         self._logger.info("starting listener")
 
@@ -142,16 +141,26 @@ class WebSocketManager:
                     #self._logger.debug("Listener timeout, continuing...")
                     continue
                 except websockets.exceptions.ConnectionClosed:
-
-                    self.running = False
+                    self._running = False
+                    self._logger.error("WebSocket connection closed")
                     if self._retries < self._max_retries:
                         self._logger.error("WebSocket close. trying reconnection")
-                        if self._connSecure:
-                            await self.connectSecure()
-                        else:
-                            await self.connect()
+                        try:
+                            if self._connSecure:
+                                await self.connectSecure()
+                            else:
+                                await self.connect()
+                            
+                        # Reset retries only if reconnection succeeds
+                            self._retries = 0  
+                            self._running = True  # Resume operation
+                        except Exception as e:
+                            self._retries += 1
+                            self._logger.error(f"Reconnection failed: {e}")
+                        #####
                     else:
                         self._logger.error("WebSocket close. Maximum retries reached")
+                        break #added
                 except Exception as e:
                     self._logger.error(f"Listener error: {e}")
                     continue  
@@ -160,6 +169,7 @@ class WebSocketManager:
             if message:         #if a message is received, handle it
                 message = json.loads(message)
                 await self.handle_message(message)
+
 
 
 
