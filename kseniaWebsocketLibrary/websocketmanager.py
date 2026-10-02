@@ -464,7 +464,8 @@ class WebSocketManager:
     async def testConnect(self):
         try:
             self._logger.info("TEST - trying WebSocket connection")
-            self._ws = await websockets.connect(self._uri, subprotocols=['KS_WSOCK'])
+            uri=f"ws://{self._ip}/KseniaWsock"        #using unsecure connection!!!!!!
+            self._ws = await websockets.connect(uri, subprotocols=['KS_WSOCK'])
             self._loginId = await ws_login(self._ws, self._pin, self._logger)
             if self._loginId < 0:
                 self._logger.error("TEST - login error for WebSocket")

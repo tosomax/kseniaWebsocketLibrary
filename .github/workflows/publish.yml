@@ -3,11 +3,10 @@ name: Publish Python Package
 on:
   push:
     branches:
-      - main  # Esegui il workflow solo sui push alla branch "main"
-  workflow_dispatch:  # Consente di eseguire manualmente il workflow
-
+      - main  
+  workflow_dispatch:  
 permissions:
-  contents: write  # Permessi per operazioni di scrittura su GitHub
+  contents: write  
   
 jobs:
   build-and-publish:
@@ -20,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.9  # Specifica la versione di Python
+        python-version: 3.9  
 
     - name: Configure Git
       run: |
